@@ -5,10 +5,10 @@ import {
     tokenRefresh
 } from "../../api/services/token";
 
-export const createTokenAction = createAsyncThunk('token/token', () => {
-    return createToken();
+export const createTokenAction = createAsyncThunk('token/token', (params) => {
+    return createToken(params);
 })
 
-export const tokenRefreshAction = createAsyncThunk('token/refresh', () => {
-    return tokenRefresh();
+export const tokenRefreshAction = createAsyncThunk('token/refresh', (params) => {
+    return tokenRefresh(params);
 })

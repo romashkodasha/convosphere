@@ -6,6 +6,7 @@ import './RegistrationPage.css';
 import { createUserAction } from '../../store/actions/users';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { createTokenAction } from '../../store/actions/token';
 
 function RegistrationPage() {
   const dispatch = useDispatch();
@@ -21,15 +22,21 @@ function RegistrationPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async(e) => {
     e.preventDefault();
     if (formData.password === formData.confirmPassword) {
       const formDataObject = {
         username: formData.username,
         password: formData.password,
       };
-      dispatch(createUserAction(formDataObject));
+      try {
+      await dispatch(createUserAction(formDataObject));
+      await dispatch(createTokenAction(formDataObject));
+
       navigate('/');
+      } catch (error) {
+        console.log('Error:', error);
+      }
     }
   };
 
