@@ -32,6 +32,7 @@ function RegistrationPage() {
       try {
       await dispatch(createUserAction(formDataObject));
       await dispatch(createTokenAction(formDataObject));
+      localStorage.setItem('username', formData.username);
 
       navigate('/');
       } catch (error) {

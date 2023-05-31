@@ -5,14 +5,18 @@ import { Drawer, List, ListItem, ListItemText } from '@mui/material';
 import { Dialog, DialogTitle, DialogContent, DialogActions, TextField } from '@mui/material';
 import React from 'react';
 import { Col, Container, Row } from "react-bootstrap";
-import './HomePage.css';
 import { useSelector, useDispatch } from 'react-redux';
 import { useEffect, useState } from 'react';
 import { getTopicsAction } from '../../store/actions/topics';
 import { tokenRefreshAction } from '../../store/actions/token';
 import { getMessagesAction, postMessagesAction } from '../../store/actions/messages';
 import { getUsersAction } from '../../store/actions/users';
-import ParentCard from '../../components/ParentCard/ParentCard';
+import MessageCard from '../../components/MessageCard/MessageCard';
+import { useParams } from 'react-router-dom';
+import createWebSocket from '../../websocket';
+
+
+
 
 
 
@@ -40,36 +44,57 @@ function mapMessagesToUsernames(messages, users) {
     });
 }
 
-function getUserIdByUsername(users, username) {
-    if(!users){
-        return null;
+function filterMessagesByParentId(messages, id) {
+    if (!messages) {
+        return [];
     }
-    for (let i = 0; i < users.length; i++) {
-        if (users[i].username === username) {
-            return users[i].id;
-        }
+    return messages.filter((message) => message.parent === id);
+}
+function findMessageById(messages, id) {
+    if (!messages) {
+        return [];
     }
-    // Если пользователь с заданным username не найден, можно вернуть null или другое значение по вашему выбору
-    return null;
+    return messages.find((message) => message.id == id);
 }
 
 
-
-
-function HomePage() {
+function MessagePage() {
+    const dispatch = useDispatch();
     const { topics, getTopicsStatus } = useSelector((store) => store.topicsReducer);
     const { messages, getMessagesStatus } = useSelector((store) => store.messagesReducer);
     const { users, getUsersStatus } = useSelector((store) => store.usersReducer);
     const [open, setOpen] = useState(false);
     const [messageText, setMessageText] = useState('');
+    const [messagesWS, setMessagesWS] = useState([]);
+    let { id } = useParams();
+
+    const [socket, setSocket] = useState(null);
+
+    useEffect(() => {
+        const newSocket = createWebSocket(setMessagesWS);
+        setSocket(newSocket);
+        // newSocket.addEventListener('open', () => {
+        //     newSocket.send(JSON.stringify({ event: 'get_msg' }));
+        // });
+
+        // // Очистка при размонтировании компонента
+        return () => {
+            newSocket.close();
+        };
+    }, []);
+
+
+
+
+
 
 
     const tokenAccess = localStorage.getItem('tokenAccess');
     const tokenRefresh = localStorage.getItem('tokenRefresh');
 
-    const dispatch = useDispatch();
-    const [selectedTopic, setSelectedTopic] = useState(null);
 
+    const [selectedTopic, setSelectedTopic] = useState(null);
+    console.log(messagesWS)
 
 
     useEffect(() => {
@@ -89,8 +114,11 @@ function HomePage() {
     }, [getUsersStatus, dispatch]);
 
     const messagesWithUsernames = mapMessagesToUsernames(messages, users);
-    console.log(messagesWithUsernames)
-    localStorage.setItem('userId', getUserIdByUsername(users, localStorage.getItem('username')));
+    console.log(messagesWithUsernames);
+    const foundMessage = findMessageById(messagesWithUsernames, id);
+    const newArrayMessages = [foundMessage, ...filterMessagesByParentId(messagesWithUsernames, id)];
+
+    console.log(foundMessage)
 
 
     const isTokenValid = () => {
@@ -126,29 +154,7 @@ function HomePage() {
 
     };
 
-    const handleOpen = () => {
-        setOpen(true);
-    };
 
-    const handleClose = () => {
-        setOpen(false);
-    };
-
-    const handleSubmit = () => {
-        dispatch(postMessagesAction({
-            topic: 1,
-            text: messageText,
-            token: tokenAccess
-        }))
-            .catch((error) => {
-                console.log('Ошибка:', error);
-            });
-
-
-        // Закрытие формы после отправки
-        setOpen(false);
-        setMessageText('');
-    };
 
 
     const handleTopicClick = (topicId) => {
@@ -210,55 +216,24 @@ function HomePage() {
 
             <Container className="messages-container">
                 <Row xs={4} md={4} className="g-4">
-                    {messagesWithUsernames.map((item, index) => {
+                    {newArrayMessages.map((item, index) => {
                         return (
                             <Col key={index}>
-                                <ParentCard {...item} />
+                                <MessageCard socket={socket} {...item} />
+                            </Col>
+                        )
+                    })}
+                </Row>
+                <Row xs={4} md={4} className="g-4">
+                    {messagesWS.map((item, index) => {
+                        return (
+                            <Col key={index}>
+                                <MessageCard socket={socket} {...item} />
                             </Col>
                         )
                     })}
                 </Row>
             </Container>
-
-            {isTokenValid() && (
-
-                <div>
-                    <Button variant="contained" color="primary" onClick={handleOpen} style={{
-                        position: 'absolute',
-                        width: '229px',
-                        height: '42px',
-                        right: '100px',
-                        top: '167px',
-                        backgroundColor: 'rgba(142, 29, 255, 0.38)',
-
-                    }}>
-                        Написать сообщение
-                    </Button>
-
-                    <Dialog open={open} onClose={handleClose}>
-                        <DialogTitle>Написать сообщение</DialogTitle>
-                        <DialogContent>
-                            <TextField
-                                label="Текст сообщения"
-                                multiline
-                                rows={4}
-                                value={messageText}
-                                onChange={(e) => setMessageText(e.target.value)}
-                                fullWidth
-                            />
-                        </DialogContent>
-                        <DialogActions style={{
-                            display: 'flex',
-                            justifyContent: 'space-between'
-                        }}>
-                            <Button onClick={handleClose}>Назад</Button>
-                            <Button onClick={handleSubmit} color="primary">
-                                Отправить
-                            </Button>
-                        </DialogActions>
-                    </Dialog>
-                </div>
-            )}
 
 
 
@@ -267,4 +242,4 @@ function HomePage() {
     );
 }
 
-export default HomePage;
+export default MessagePage;

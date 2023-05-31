@@ -1,0 +1,13 @@
+.card {
+    margin-bottom: 40px;
+}
+
+.text {
+    border-style: dotted;
+    border-color: black;
+    border-width: 1px;
+
+}
+.link{
+    color:blue;
+}

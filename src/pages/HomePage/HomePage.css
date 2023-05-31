@@ -1,0 +1,16 @@
+.log-reg-buttons {
+    display: flex;
+    flex-direction: row;
+}
+
+nav {
+    display: flex;
+    justify-content:space-between;
+    padding-right: 67px;
+}
+
+.messages-container {
+    margin-left: 512px;
+    margin-top: 45px;
+    width: 600px;
+}

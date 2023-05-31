@@ -4,13 +4,15 @@ import React, { useState } from 'react';
 import { Button, TextField, Typography } from '@mui/material';
 import { Link } from 'react-router-dom';
 import './LoginPage.css';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { createTokenAction } from '../../store/actions/token';
+
 
 function LoginPage() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const { token } = useSelector((store) => store.tokenReducer);
 
     const [formData, setFormData] = useState({
         username: '',
@@ -31,6 +33,11 @@ function LoginPage() {
         };
         dispatch(createTokenAction(formDataObject))
             .then(() => {
+                console.log(localStorage.getItem('tokenAccess'))
+                // localStorage.setItem('tokenAccess', token.access); // Сохранение токена в localStorage
+                // localStorage.setItem('tokenRefresh', token.refresh);
+                // console.log(token.access)
+                localStorage.setItem('username', formDataObject.username)
                 navigate('/');
             })
             .catch((error) => {

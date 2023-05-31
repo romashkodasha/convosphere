@@ -4,8 +4,7 @@ import { createTokenAction, tokenRefreshAction } from "../actions/token";
 const initialState = {
     createTokenStatus: 'initial',
     tokenRefreshStatus: 'initial',
-    token: null,
-    tokenRefresh: null
+    token: null
 }
 
 const tokenSlice = createSlice({
@@ -36,7 +35,7 @@ const tokenSlice = createSlice({
         })
         .addCase(tokenRefreshAction.fulfilled, (state, {payload}) => {
             state.tokenRefreshStatus='fetched';
-            state.tokenRefresh=payload;
+            state.token=payload;
             state.error=null;
         })
         .addCase(tokenRefreshAction.rejected, (state,{error}) => {
